@@ -2,6 +2,7 @@ import { env } from "./env";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatGroq } from "@langchain/groq";
+import {ChatOllama} from "@langchain/ollama"
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 //low temp -> crisp summary
@@ -31,10 +32,19 @@ export function getChatModel(opts: ModelOpts = {}): BaseChatModel {
       });
 
     case "openai":
-    default:
       return new ChatOpenAI({
         apiKey: env.OPENAI_API_KEY,
         model: env.OPENAI_MODEL,
+        temperature: temp,
+      });
+    case "ollama":
+    default:
+      return new ChatOllama({
+        model: env.OLLAMA_MODEL,
+        baseUrl: 'https://ollama.com',
+        headers: {
+          Authorization: `Bearer ${env.OLLAMA_API_KEY}`
+        },
         temperature: temp,
       });
   }

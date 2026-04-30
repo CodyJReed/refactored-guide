@@ -10,6 +10,7 @@ searchRouter.post("/", async (req, res) => {
     const result = await runSearch(input);
     res.status(200).json(result);
   } catch (e) {
+    console.log('error', e)
     const errorMessage = (e as Error)?.message ?? "unknown error occured";
     res.status(400).json({ error: errorMessage });
   }
