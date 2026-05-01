@@ -3,21 +3,23 @@
 // ... store embedding in RAM, letting us insert chunks to later...
 // ... run a search against
 
-type Provider = "ollama" | "gemini";
-
-function getProvider(): Provider {
-  const getCurrentProvider = (
-    process.env.RAG_MODEL_PROVIDER ?? "ollama"
-  ).toLowerCase();
-
-  return getCurrentProvider === "ollama" ? "ollama" : "gemini";
-}
-
 // Create embeddings client
 import { OllamaEmbeddings } from "@langchain/ollama";
+import { TaskType } from "@google/generative-ai";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { Document } from "@langchain/core/documents";
+
+
+type Provider = "ollama" | "google";
+
+function getProvider(): Provider {
+  const getCurrentProvider = (
+    process.env.RAG_MODEL_PROVIDER ?? "gemini"
+  ).toLowerCase();
+
+  return getCurrentProvider === "gemini" ? "google" : "ollama";
+}
 
 function makeGoogleEmbeddings() {
   const key = process.env.GOOGLE_API_KEY;
@@ -26,11 +28,14 @@ function makeGoogleEmbeddings() {
   }
 
   return new GoogleGenerativeAIEmbeddings({
-    model: "text-embedding-004",
     apiKey: key,
+    model: "gemini-embedding-001",
+    taskType: TaskType.RETRIEVAL_DOCUMENT,
   });
 }
 
+// TODO Make use of MLX and local embedding...
+// Ollama cloud does not support embedding; yet...
 function makeOllamaEmbeddings() {
   const key = process.env.OLLAMA_API_KEY;
   if (!key) {
@@ -38,7 +43,7 @@ function makeOllamaEmbeddings() {
   }
 
   return new OllamaEmbeddings({
-    model: "llama2",
+    model: "nomic-embed-text",
     baseUrl: "https://ollama.com",
     headers: {
       Authorization: `Bearer ${key}`,
@@ -61,10 +66,13 @@ export function getVectorStore(): MemoryVectorStore {
   const provider = getProvider();
   // Return store...
   //  if current provider remains unchanged
-  if (store && currentSetProvider === provider) return store;
+  if (store && currentSetProvider === provider) {
+    return store;
+  } 
 
   // Handle initialization or provider change
   store = new MemoryVectorStore(makeEmbeddings(provider));
+  currentSetProvider = provider;
 
   return store;
 }
