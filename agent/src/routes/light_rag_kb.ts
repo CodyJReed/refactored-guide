@@ -32,19 +32,9 @@ kbRouter.post("/ingest", async (req, res) => {
   }
 });
 // Route to reset current store && provider
-kbRouter.post("/reset", (_req, res) => {
-  try {
-    resetStore();
-
-    return res.status(200).json({
-      ok: true,
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(400).json({
-      error: "An error occurred during store reset.",
-    });
-  }
+kbRouter.post("/reset", async (_req, res) => {
+  resetStore();
+  return res.status(200).json({ ok: true, cleared: true });
 });
 
 const AskBody = z.object({
@@ -68,9 +58,6 @@ kbRouter.post("/ask", async (req, res) => {
       confidence: result.confidence,
     });
   } catch (e) {
-    console.log(e);
-    res.status(400).json({
-      error: "An error occurred during store reset.",
-    });
+    res.status(400).json({ error: "An error occured while asking" });
   }
 });
